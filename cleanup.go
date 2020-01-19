@@ -13,30 +13,10 @@
 // limitations under the License.
 package main
 
-import (
-	"github.com/spf13/cobra"
-	"log"
-)
+type BranchesOptions struct {
+	Force bool
+}
 
-func main() {
-	cleanup := &cobra.Command{
-		Use:   "cleanup",
-		Short: `💫 Remove gone Git branches periodically.`,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return nil
-		},
-	}
-
-	cleanup.AddCommand(&cobra.Command{
-		Use:   "branches <PATH>",
-		Short: `Delete local branches that are gone on the remote`,
-		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return nil
-		},
-	})
-
-	if err := cleanup.Execute(); err != nil {
-		log.Fatal(err)
-	}
+func Branches(path string, options *BranchesOptions) error {
+	return nil
 }
