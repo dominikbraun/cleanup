@@ -1,0 +1,20 @@
+# IDE directories
+.idea
+.vscode
+
+# Directory for compiled binaries
+.target/
+
+# Binaries in root directory
+main
+cleanup
+
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
