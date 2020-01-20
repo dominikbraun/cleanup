@@ -11,6 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+// Package main provides the cleanup executable and its implementation.
 package main
 
 import (
@@ -18,7 +20,10 @@ import (
 	"log"
 )
 
+// main builds the CLI commands and executes the desired sub-command.
 func main() {
+	var branchesOptions BranchesOptions
+
 	cleanup := &cobra.Command{
 		Use:   "cleanup",
 		Short: `💫 Remove gone Git branches periodically.`,
@@ -27,14 +32,21 @@ func main() {
 		},
 	}
 
-	cleanup.AddCommand(&cobra.Command{
+	branches := &cobra.Command{
 		Use:   "branches <PATH>",
 		Short: `Delete local branches that are gone on the remote`,
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return nil
+			return Branches(args[0], &branchesOptions)
 		},
-	})
+	}
+
+	branches.Flags().BoolVarP(&branchesOptions.HasMultipleRepos, "has-multiple-repos",
+		"m", false, `Delete branches in sub-repositories`)
+	branches.Flags().BoolVarP(&branchesOptions.Force, "force",
+		"f", false, `Force the deletion, ignoring warnings`)
+
+	cleanup.AddCommand(branches)
 
 	if err := cleanup.Execute(); err != nil {
 		log.Fatal(err)
