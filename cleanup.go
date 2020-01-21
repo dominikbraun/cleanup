@@ -61,18 +61,20 @@ func Branches(path string, options *BranchesOptions, w io.Writer) error {
 			_, _ = w.Write([]byte(output))
 		}
 
-		if len(deleted) > 0 {
-			output := fmt.Sprintf("Found gone branches at `%s`:\n", repo)
-			_, _ = w.Write([]byte(output))
+		if len(deleted) == 0 {
+			continue
+		}
 
-			for branch, err := range deleted {
-				output := fmt.Sprintf("\t- Deleted %s\n", branch)
-				if err != nil {
-					output = fmt.Sprintf("\t- Failed to delete %s: %s\n", branch, err.Error())
-				}
+		output := fmt.Sprintf("Found gone branches at `%s`:\n", repo)
+		_, _ = w.Write([]byte(output))
 
-				_, _ = w.Write([]byte(output))
+		for branch, err := range deleted {
+			output := fmt.Sprintf("\t- Deleted %s\n", branch)
+			if err != nil {
+				output = fmt.Sprintf("\t- Failed to delete %s: %s\n", branch, err.Error())
 			}
+
+			_, _ = w.Write([]byte(output))
 		}
 	}
 
