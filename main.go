@@ -18,6 +18,7 @@ package main
 import (
 	"github.com/spf13/cobra"
 	"log"
+	"os"
 )
 
 // main builds the CLI commands and executes the desired sub-command.
@@ -37,7 +38,7 @@ func main() {
 		Short: `Delete local branches that are gone on the remote`,
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return Branches(args[0], &branchesOptions)
+			return Branches(args[0], &branchesOptions, os.Stdout)
 		},
 	}
 

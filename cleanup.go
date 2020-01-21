@@ -20,15 +20,15 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
-	"log"
 	"os/exec"
 	"strings"
 )
 
 const (
 	gitDir     string = ".git"
-	searchExpr string = "]"
+	searchExpr string = ""
 )
 
 // RepositoryPath describes the filesystem path for a repository.
@@ -45,26 +45,34 @@ type BranchesOptions struct {
 // a repository or a root directory that contains multiple repositories.
 //
 // Returns an error if no Git repository can be found in the path.
-func Branches(path string, options *BranchesOptions) error {
+func Branches(path string, options *BranchesOptions, w io.Writer) error {
 	repositories, err := repositoryPaths(path, options.HasMultipleRepos)
+
 	if err != nil {
 		return err
-	}
-
-	if len(repositories) == 0 {
+	} else if len(repositories) == 0 {
 		return errors.New("no Git repository found")
 	}
 
 	for _, repo := range repositories {
 		deleted, err := deleteBranches(repo)
 		if err != nil {
-			log.Println(err)
+			output := fmt.Sprintf("Error at `%s`: %s\n", repo, err.Error())
+			_, _ = w.Write([]byte(output))
 		}
 
-		fmt.Printf("Deleted from repository at `%s`:\n", repo)
+		if len(deleted) > 0 {
+			output := fmt.Sprintf("Found gone branches at `%s`:\n", repo)
+			_, _ = w.Write([]byte(output))
 
-		for _, branch := range deleted {
-			fmt.Printf("- %s\n", branch)
+			for branch, err := range deleted {
+				output := fmt.Sprintf("\t- Deleted %s\n", branch)
+				if err != nil {
+					output = fmt.Sprintf("\t- Failed to delete %s: %s\n", branch, err.Error())
+				}
+
+				_, _ = w.Write([]byte(output))
+			}
 		}
 	}
 
@@ -74,8 +82,11 @@ func Branches(path string, options *BranchesOptions) error {
 // deleteBranches deletes branches in a repository that are considered
 // gone. For determining these branches, `git branch -vv` will be used.
 //
-// Returns a list of all branches that have been deleted successfully.
-func deleteBranches(path RepositoryPath) ([]string, error) {
+// Returns a map with the deleted branches as map keys and an error as
+// value. If the error value is not nil for a key, the branch probably
+// couldn't be deleted successfully. The second return value indicates
+// if an error occurred when executing the `git branch -vv` command.
+func deleteBranches(path RepositoryPath) (map[string]error, error) {
 	cmd := exec.Command("git", "branch", "-vv")
 	cmd.Dir = string(path)
 
@@ -84,14 +95,14 @@ func deleteBranches(path RepositoryPath) ([]string, error) {
 		return nil, err
 	}
 
-	deleted := make([]string, 0)
+	deleted := make(map[string]error)
 
 	for _, branch := range readBranchNames(out, searchExpr) {
 		cmd := exec.Command("git", "branch", "-d", branch)
 		cmd.Dir = string(path)
 
-		_, _ = cmd.Output()
-		deleted = append(deleted, branch)
+		_, err := cmd.Output()
+		deleted[branch] = err
 	}
 
 	return deleted, nil
@@ -104,7 +115,7 @@ func deleteBranches(path RepositoryPath) ([]string, error) {
 // The Git output is expected to look like this:
 // * master		34a234a [origin/master] Merged some features
 //  feature/1	34a234a [origin/feature/1: gone] Implemented endpoints
-//  feature/12	3fc2e37 [origin/feature/2: behind 71] Added CLI command
+//  feature/2	3fc2e37 [origin/feature/2: behind 71] Added CLI command
 //
 // Using a filter for gone branches, merely feature/1 will be returned.
 //
@@ -134,7 +145,7 @@ func readBranchNames(buf []byte, filter string) []string {
 //
 // In the case that the provided path itself is a repository, it simply
 // will return that path. However, in the case that the path is a parent
-// directory containing multiple repositories, all paths will be returned.
+// directory containing multiple repositories, it returns all that paths.
 //
 // hasMultipleRepos indicates if the provided path is a parent directory.
 func repositoryPaths(path string, hasMultipleRepos bool) ([]RepositoryPath, error) {
