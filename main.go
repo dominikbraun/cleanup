@@ -46,6 +46,8 @@ func main() {
 		"m", false, `Delete branches in sub-repositories`)
 	branches.Flags().BoolVarP(&branchesOptions.Force, "force",
 		"f", false, `Force the deletion, ignoring warnings`)
+	branches.Flags().BoolVarP(&branchesOptions.DryRun, "dry-run",
+		"d", false, `Preview the branches without deleting them`)
 
 	cleanup.AddCommand(branches)
 

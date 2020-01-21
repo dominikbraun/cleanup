@@ -31,6 +31,14 @@ const (
 	searchExpr string = ""
 )
 
+const (
+	fmtRepositoryErr       string = "Error at `%s`: %s\n"
+	fmtGoneBranchesHeading string = "Found gone branches at `%s`:\n"
+	fmtRemovalSuccess      string = "\t- Deleted %s\n"
+	fmtRemovalPreview      string = "\t- Will delete %s\n"
+	fmtRemovalFailure      string = "\t- Failed to delete %s: %s\n"
+)
+
 // RepositoryPath describes the filesystem path for a repository.
 type RepositoryPath string
 
@@ -38,6 +46,7 @@ type RepositoryPath string
 type BranchesOptions struct {
 	HasMultipleRepos bool
 	Force            bool
+	DryRun           bool
 }
 
 // Branches is the entry point for the `branch` command and deletes all
@@ -55,9 +64,9 @@ func Branches(path string, options *BranchesOptions, w io.Writer) error {
 	}
 
 	for _, repo := range repositories {
-		deleted, err := deleteBranches(repo)
+		deleted, err := deleteBranches(repo, options.DryRun)
 		if err != nil {
-			output := fmt.Sprintf("Error at `%s`: %s\n", repo, err.Error())
+			output := fmt.Sprintf(fmtRepositoryErr, repo, err.Error())
 			_, _ = w.Write([]byte(output))
 		}
 
@@ -65,13 +74,19 @@ func Branches(path string, options *BranchesOptions, w io.Writer) error {
 			continue
 		}
 
-		output := fmt.Sprintf("Found gone branches at `%s`:\n", repo)
+		output := fmt.Sprintf(fmtGoneBranchesHeading, repo)
 		_, _ = w.Write([]byte(output))
 
 		for branch, err := range deleted {
-			output := fmt.Sprintf("\t- Deleted %s\n", branch)
-			if err != nil {
-				output = fmt.Sprintf("\t- Failed to delete %s: %s\n", branch, err.Error())
+			var output string
+
+			switch {
+			case options.DryRun:
+				output = fmt.Sprintf(fmtRemovalPreview, branch)
+			case err != nil:
+				output = fmt.Sprintf(fmtRemovalFailure, branch, err.Error())
+			default:
+				output = fmt.Sprintf(fmtRemovalSuccess, branch)
 			}
 
 			_, _ = w.Write([]byte(output))
@@ -88,7 +103,7 @@ func Branches(path string, options *BranchesOptions, w io.Writer) error {
 // value. If the error value is not nil for a key, the branch probably
 // couldn't be deleted successfully. The second return value indicates
 // if an error occurred when executing the `git branch -vv` command.
-func deleteBranches(path RepositoryPath) (map[string]error, error) {
+func deleteBranches(path RepositoryPath, dryRun bool) (map[string]error, error) {
 	cmd := exec.Command("git", "branch", "-vv")
 	cmd.Dir = string(path)
 
@@ -100,11 +115,15 @@ func deleteBranches(path RepositoryPath) (map[string]error, error) {
 	deleted := make(map[string]error)
 
 	for _, branch := range readBranchNames(out, searchExpr) {
-		cmd := exec.Command("git", "branch", "-d", branch)
-		cmd.Dir = string(path)
+		if !dryRun {
+			cmd := exec.Command("git", "branch", "-d", branch)
+			cmd.Dir = string(path)
 
-		_, err := cmd.Output()
-		deleted[branch] = err
+			_, err := cmd.Output()
+			deleted[branch] = err
+		} else {
+			deleted[branch] = nil
+		}
 	}
 
 	return deleted, nil
@@ -129,12 +148,14 @@ func readBranchNames(buf []byte, filter string) []string {
 	for scanner.Scan() {
 		line := scanner.Text()
 
-		if strings.Contains(line, filter) {
-			for i, c := range line {
-				if i > 1 && string(c) == " " {
-					branches = append(branches, line[2:i])
-					break
-				}
+		if !strings.Contains(line, filter) {
+			continue
+		}
+
+		for i, c := range line {
+			if i > 1 && string(c) == " " {
+				branches = append(branches, line[2:i])
+				break
 			}
 		}
 	}
