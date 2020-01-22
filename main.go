@@ -48,6 +48,8 @@ func main() {
 		"f", false, `Force the deletion, ignoring warnings`)
 	branches.Flags().BoolVarP(&branchesOptions.DryRun, "dry-run",
 		"d", false, `Preview the branches without deleting them`)
+	branches.Flags().StringVarP(&branchesOptions.Exclude, "exclude",
+		"e", "", `Exclude one or more branches from deletion`)
 
 	cleanup.AddCommand(branches)
 

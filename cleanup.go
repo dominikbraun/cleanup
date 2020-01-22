@@ -28,7 +28,7 @@ import (
 
 const (
 	gitDir     string = ".git"
-	searchExpr string = ""
+	searchExpr string = ": gone]"
 )
 
 const (
@@ -47,6 +47,7 @@ type BranchesOptions struct {
 	HasMultipleRepos bool
 	Force            bool
 	DryRun           bool
+	Exclude          string
 }
 
 // Branches is the entry point for the `branch` command and deletes all
@@ -63,8 +64,10 @@ func Branches(path string, options *BranchesOptions, w io.Writer) error {
 		return errors.New("no Git repository found")
 	}
 
+	exclude := strings.Split(options.Exclude, ",")
+
 	for _, repo := range repositories {
-		deleted, err := deleteBranches(repo, options.DryRun)
+		deleted, err := deleteBranches(repo, options.DryRun, exclude)
 		if err != nil {
 			output := fmt.Sprintf(fmtRepositoryErr, repo, err.Error())
 			_, _ = w.Write([]byte(output))
@@ -103,7 +106,7 @@ func Branches(path string, options *BranchesOptions, w io.Writer) error {
 // value. If the error value is not nil for a key, the branch probably
 // couldn't be deleted successfully. The second return value indicates
 // if an error occurred when executing the `git branch -vv` command.
-func deleteBranches(path RepositoryPath, dryRun bool) (map[string]error, error) {
+func deleteBranches(path RepositoryPath, dryRun bool, exclude []string) (map[string]error, error) {
 	cmd := exec.Command("git", "branch", "-vv")
 	cmd.Dir = string(path)
 
@@ -115,6 +118,10 @@ func deleteBranches(path RepositoryPath, dryRun bool) (map[string]error, error) 
 	deleted := make(map[string]error)
 
 	for _, branch := range readBranchNames(out, searchExpr) {
+		if isExcluded(branch, exclude) {
+			continue
+		}
+
 		if !dryRun {
 			cmd := exec.Command("git", "branch", "-d", branch)
 			cmd.Dir = string(path)
@@ -225,4 +232,16 @@ func isRepository(path RepositoryPath) (bool, error) {
 	}
 
 	return false, nil
+}
+
+// isExcluded checks if a branch is contained in an slice of excluded
+// branches. Whitespaces will be skipped when comparing the branches.
+func isExcluded(branch string, exclude []string) bool {
+	for _, e := range exclude {
+		if branch == strings.Trim(e, " ") {
+			return true
+		}
+	}
+
+	return false
 }
