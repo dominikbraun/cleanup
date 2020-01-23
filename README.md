@@ -98,7 +98,6 @@ Just create a scheduled task like this &ndash; and make sure to provide correct 
 
 <p align="center">
 <br>
-<br>
 <strong>クリーン</strong>
 <br>
 </p>
