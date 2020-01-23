@@ -95,3 +95,7 @@ Just create a scheduled task like this &ndash; and make sure to provide correct 
 > SCHTASKS /CREATE /SC DAILY /ST 23:00 /TN "Clean up repositories" ^
   /TR "C:\Path\To\cleanup.exe branches --has-multiple-repos C:\Path\To\Projects"
 ````
+
+<p align="center">
+**クリーン**
+</p>
