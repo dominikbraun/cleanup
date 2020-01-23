@@ -9,11 +9,11 @@
 <h3 align="center">cleanup &ndash; Remove gone Git branches with ease.</h3>
 
 <p align="center">
-<img src="https://circleci.com/gh/dominikbraun/foodunit.svg?style=shield">
-<img src="https://goreportcard.com/badge/github.com/dominikbraun/foodunit">
-<img src="https://www.codefactor.io/repository/github/dominikbraun/dice/badge?s=0f13518b90c29be6bc3ec4ff537581a2e5c51c6a" />
-<img src="https://img.shields.io/github/v/release/dominikbraun/foodunit?sort=semver">
-<img src="https://img.shields.io/badge/license-Apache--2.0-brightgreen">
+<a href="https://circleci.com/gh/dominikbraun/cleanup"><img src="https://circleci.com/gh/dominikbraun/cleanup.svg?style=shield"></a>
+<a href="https://goreportcard.com/report/github.com/dominikbraun/cleanup"><img src="https://goreportcard.com/badge/github.com/dominikbraun/cleanup"></a>
+<a href="https://www.codefactor.io/repository/github/dominikbraun/cleanup"><img src="https://www.codefactor.io/repository/github/dominikbraun/cleanup/badge" /></a>
+<a href="https://github.com/dominikbraun/cleanup/releases"><img src="https://img.shields.io/github/v/release/dominikbraun/cleanup?sort=semver"></a>
+<a href="https://github.com/dominikbraun/cleanup/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-brightgreen"></a>
 <br>
 <br>
 <br>
@@ -23,11 +23,11 @@
 
 :dizzy: cleanup is a CLI tool for keeping your Git repositories clean. It removes old branches in one or more repositories with a single command.
 
-**Project status:** In active development and stable to use.
+**Project status:** In active development. Can be used already, but without warranty.
 
 ## <img src="https://sternentstehung.de/cleanup-dot.png"> Usage
 
-You merely need to provide the path to your repository. For example, change into your project directory and remove all gone branches:
+You merely need to provide the path to your repository. For example, change into your project directory and remove all gone branches like this:
 
 ````shell script
 $ cleanup branches .
@@ -67,7 +67,7 @@ Copy the downloaded binary into a directory like `/usr/local/bin`. Make sure the
 
 **Windows**
 
-Create a directory like `C:\Program Files\cleanup` and copy downloaded executable into it. [Add the direcotry](https://www.computerhope.com/issues/ch000549.htm) to `Path`.
+Create a directory like `C:\Program Files\cleanup` and copy the executable into it. [Add the directory](https://www.computerhope.com/issues/ch000549.htm) to `Path`.
 
 ## <img src="https://sternentstehung.de/cleanup-dot.png"> Remove branches periodically
 
@@ -75,13 +75,13 @@ Especially developers working in larger teams may want to clean up their reposit
 
 **Linux/macOS**
 
-Edit the cronjob table.
+Edit cron's job table.
 
 ````shell script
 $ crontab -e
 ````
 
-Adding a line like this will run cleanup every day at 11 PM for _all_ repositories. Make sure you provide a correct paths to the cleanup binary and project directory.
+Adding a line like this will run cleanup every day at 11 PM for _all_ repositories. Make sure you provide correct paths to the cleanup binary and project directory.
 
 ````shell script
 0 23 * * * /usr/local/bin/cleanup branches --has-multiple-repos /home/user/projects
@@ -89,9 +89,15 @@ Adding a line like this will run cleanup every day at 11 PM for _all_ repositori
 
 **Windows**
 
-You can created a scheduled task via GUI or command prompt. Again, make sure to provide correct paths for the cleanup executable and project directory.
+Just create a scheduled task like this &ndash; and make sure to provide correct paths for the cleanup executable and project directory.
 
 ````shell script
 > SCHTASKS /CREATE /SC DAILY /ST 23:00 /TN "Clean up repositories" ^
   /TR "C:\Path\To\cleanup.exe branches --has-multiple-repos C:\Path\To\Projects"
 ````
+
+<p align="center">
+<br>
+<strong>クリーン</strong>
+<br>
+</p>
