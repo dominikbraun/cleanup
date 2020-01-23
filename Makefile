@@ -3,7 +3,7 @@ default: build
 GOOS=$(shell go env GOOS)
 GOARCH=$(shell go env GOARCH)
 
-build: always
+build:
 	GO111MODULE=on
 	go build -v -ldflags="-s -w" -o .target/cleanup main.go
 
