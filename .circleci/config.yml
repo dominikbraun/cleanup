@@ -52,14 +52,14 @@ jobs:
           paths:
             - ".git"
       - run:
-          name: Build the Dice binary
+          name: Build the cleanup binary
           command: make build
 
 workflows:
   version: 2
-  dice-ci:
+  cleanup-ci:
     jobs:
-      - dice-build
-      - dice-test:
+      - cleanup-build
+      - cleanup-test:
           requires:
-            -  dice-build
+            -  cleanup-build
