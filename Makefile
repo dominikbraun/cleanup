@@ -5,7 +5,7 @@ GOARCH=$(shell go env GOARCH)
 
 build:
 	GO111MODULE=on
-	go build -v -ldflags="-s -w" -o .target/cleanup main.go
+	go build -v -ldflags="-s -w" -o .target/cleanup .
 
 .PHONY: clean
 clean:
