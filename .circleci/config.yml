@@ -60,6 +60,6 @@ workflows:
   dice-ci:
     jobs:
       - dice-build
-      - dice-test
+      - dice-test:
           requires:
             -  dice-build
