@@ -92,5 +92,6 @@ Adding a line like this will run cleanup every day at 11 PM for _all_ repositori
 You can created a scheduled task via GUI or command prompt. Again, make sure to provide correct paths for the cleanup executable and project directory.
 
 ````shell script
-> SCHTASKS /CREATE /SC DAILY /TR "C:\Path\To\cleanup.exe branches --has-multiple-repos C:\Path\To\Projects" /ST 23:00
+> SCHTASKS /CREATE /SC DAILY /ST 23:00 /TN "Clean up repositories" ^
+  /TR "C:\Path\To\cleanup.exe branches --has-multiple-repos C:\Path\To\Projects"
 ````
