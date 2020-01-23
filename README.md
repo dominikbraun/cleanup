@@ -67,7 +67,7 @@ Copy the downloaded binary into a directory like `/usr/local/bin`. Make sure the
 
 **Windows**
 
-Create a directory like `C:\Program Files\cleanup` and copy downloaded executable into it. [https://www.computerhope.com/issues/ch000549.htm](Add the directory) to `Path`.
+Create a directory like `C:\Program Files\cleanup` and copy downloaded executable into it. [Add the direcotry](https://www.computerhope.com/issues/ch000549.htm) to `Path`.
 
 ## <img src="https://sternentstehung.de/cleanup-dot.png"> Remove branches periodically
 
