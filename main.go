@@ -26,8 +26,9 @@ func main() {
 	var branchesOptions BranchesOptions
 
 	cleanup := &cobra.Command{
-		Use:   "cleanup",
-		Short: `💫 Remove gone Git branches with ease.`,
+		Use:     "cleanup",
+		Short:   `💫 Remove gone Git branches with ease.`,
+		Version: "0.1.0",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return nil
 		},
