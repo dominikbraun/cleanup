@@ -33,6 +33,7 @@ const (
 
 const (
 	fmtRepositoryErr       string = "Error at `%s`: %s\n"
+	fmtNoBranchesFound     string = "No gone branches found at `%s`.\n"
 	fmtGoneBranchesHeading string = "Found gone branches at `%s`:\n"
 	fmtRemovalSuccess      string = "\t- Deleted %s\n"
 	fmtRemovalPreview      string = "\t- Will delete %s\n"
@@ -71,9 +72,12 @@ func Branches(path string, options *BranchesOptions, w io.Writer) error {
 		if err != nil {
 			output := fmt.Sprintf(fmtRepositoryErr, repo, err.Error())
 			_, _ = w.Write([]byte(output))
+			continue
 		}
 
 		if len(deleted) == 0 {
+			output := fmt.Sprintf(fmtNoBranchesFound, repo)
+			_, _ = w.Write([]byte(output))
 			continue
 		}
 
@@ -181,16 +185,16 @@ func readBranchNames(buf []byte, filter string) []string {
 func repositoryPaths(path string, hasMultipleRepos bool) ([]RepositoryPath, error) {
 	paths := make([]RepositoryPath, 0)
 
-	if !hasMultipleRepos {
-		isRepo, err := isRepository(RepositoryPath(path))
-		if err != nil {
-			return nil, err
-		}
+	isRepo, err := isRepository(RepositoryPath(path))
+	if err != nil {
+		return nil, err
+	}
+	if isRepo {
+		paths = append(paths, RepositoryPath(path))
+	}
 
-		if isRepo {
-			paths = append(paths, RepositoryPath(path))
-			return paths, nil
-		}
+	if !hasMultipleRepos {
+		return paths, nil
 	}
 
 	content, err := ioutil.ReadDir(path)
