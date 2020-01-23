@@ -97,5 +97,5 @@ Just create a scheduled task like this &ndash; and make sure to provide correct 
 ````
 
 <p align="center">
-**クリーン**
+<strong>クリーン</strong>
 </p>
