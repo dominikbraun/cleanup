@@ -1,0 +1,65 @@
+version: 2.1
+
+executors:
+  go-container:
+    docker:
+      - image: circleci/golang:1.13
+        environment:
+          CGO_ENABLED: 0
+          GO111MODULE: "on"
+
+jobs:
+  cleanup-test:
+    executor: go-container
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ .Branch }}-{{ checksum "go.mod" }}
+            - go-mod-v1-{{ .Branch }}-
+            - go-mod-v1-
+            - git-v1-{{ .Branch }}-{{ .Revision }}
+            - git-v1-{{ .Branch }}
+      - run: go mod download
+      - save_cache:
+          key: go-mod-v1-{{ .Branch }}-{{ checksum "go.mod" }}
+          paths:
+            - /go/pkg
+      - save_cache:
+          key: git-v1-{{ .Branch }}-{{ .Revision }}
+          paths:
+            - ".git"
+      - run: make test
+
+  cleanup-build:
+    executor: go-container
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ .Branch }}-{{ checksum "go.mod" }}
+            - go-mod-v1-{{ .Branch }}-
+            - go-mod-v1-
+            - git-v1-{{ .Branch }}-{{ .Revision }}
+            - git-v1-{{ .Branch }}
+      - run: go mod download
+      - save_cache:
+          key: go-mod-v1-{{ .Branch }}-{{ checksum "go.mod" }}
+          paths:
+            - /go/pkg
+      - save_cache:
+          key: git-v1-{{ .Branch }}-{{ .Revision }}
+          paths:
+            - ".git"
+      - run:
+          name: Build the Dice binary
+          command: make build
+
+workflows:
+  version: 2
+  dice-ci:
+    jobs:
+      - dice-build
+      - dice-test
+          requires:
+            -  dice-build
