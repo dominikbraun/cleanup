@@ -3,14 +3,14 @@ default: build
 GOOS=$(shell go env GOOS)
 GOARCH=$(shell go env GOARCH)
 
-build: always
-    GO111MODULE=on
-    go build -v -ldflags="-s -w" -o .target/cleanup main.go
+build:
+	GO111MODULE=on
+	go build -v -ldflags="-s -w" -o .target/cleanup .
 
 .PHONY: clean
 clean:
-    rm -rf .target
+	rm -rf .target
 
-:PHONY: test
+.PHONY: test
 test:
-    go test -v ./...
+	go test -v ./...
