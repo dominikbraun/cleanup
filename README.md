@@ -39,15 +39,15 @@ If you want to get a preview of branches that will be deleted, just perform a dr
 $ cleanup branches --dry-run .
 ````
 
-There appear some branches that probably shouldn't be deleted? Exclude them:
+There appear some branches that probably shouldn't be deleted? You can simply exclude them:
 
 ````shell script
 $ cleanup branches --exclude="feature/3, feature/4" .
 ````
 
-#### Cleaning multiple repositories at once
+**Cleaning multiple repositories at once**
 
-Many developers are working on several projects. Let's assume that these projects have a common parent directory.
+Many developers work on multiple projects at once. Let's assume that these projects have a common parent directory.
 
 <img src="https://sternentstehung.de/example-projects.png">
 
@@ -59,18 +59,38 @@ $ cleanup branches --has-multiple-repos projects
 
 ## <img src="https://sternentstehung.de/cleanup-dot.png"> Installation
 
-Download the [latest release of cleanup](https://github.com/dominikbraun/cleanup/releases) and copy the binary into a directory like `/usr/local/bin`. Make sure the directory is listed in `PATH`.
+Download the [latest release of cleanup](https://github.com/dominikbraun/cleanup/releases).
+
+**Linux/macOS**
+
+Copy the downloaded binary into a directory like `/usr/local/bin`. Make sure the directory is listed in `PATH`.
+
+**Windows**
+
+Create a directory like `C:\Program Files\cleanup` and copy downloaded executable into it. [https://www.computerhope.com/issues/ch000549.htm](Add the directory) to `Path`.
 
 ## <img src="https://sternentstehung.de/cleanup-dot.png"> Remove branches periodically
 
-##### Linux
+Especially developers working in larger teams may want to clean up their repositories periodically.
 
-...
+**Linux/macOS**
 
-##### macOS
+Edit the cronjob table.
 
-...
+````shell script
+$ crontab -e
+````
 
-##### Windows
+Adding a line like this will run cleanup every day at 11 PM for _all_ repositories. Make sure you provide a correct paths to the cleanup binary and project directory.
 
-...
+````shell script
+0 23 * * * /usr/local/bin/cleanup branches --has-multiple-repos /home/user/projects
+````
+
+**Windows**
+
+You can created a scheduled task via GUI or command prompt. Again, make sure to provide correct paths for the cleanup executable and project directory.
+
+````shell script
+> SCHTASKS /CREATE /SC DAILY /TR "C:\Path\To\cleanup.exe branches --has-multiple-repos C:\Path\To\Projects" /ST 23:00
+````
