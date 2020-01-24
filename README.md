@@ -25,7 +25,7 @@
 
 **Project status:** In active development. Can be used without warranty.
 
-## <img src="https://sternentstehung.de/cleanup-dot.png"> Usage
+## <img src="https://sternentstehung.de/cleanup-dot.png"> Quick example
 
 You merely need to provide the path to your repository. For example, change into your project directory and remove all gone branches like this:
 
@@ -68,7 +68,7 @@ $ git branch -vv
     feature/2	3fc2e37 [origin/feature/2: gone] Added CLI command
 ```
 
-You've probably been doing the same thing, deleting all gone branches manually one by one. cleanup does the exact same thing, but automated and far more flexible.
+You've probably been doing the same thing, deleting all gone branches manually one by one. cleanup does this for you automatically and far more flexible.
 
 ## <img src="https://sternentstehung.de/cleanup-dot.png"> Installation
 
