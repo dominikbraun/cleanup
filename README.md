@@ -23,7 +23,7 @@
 
 :dizzy: cleanup is a CLI tool for keeping your Git repositories clean. It removes old branches in one or more repositories with a single command.
 
-**Project status:** In active development. Can be used already, but without warranty.
+**Project status:** In active development. Can be used without warranty.
 
 ## <img src="https://sternentstehung.de/cleanup-dot.png"> Usage
 
@@ -56,6 +56,19 @@ Deleting gone branches in all of these repositories is fairly simple:
 ````shell script
 $ cleanup branches --has-multiple-repos projects
 ````
+
+## <img src="https://sternentstehung.de/cleanup-dot.png"> What cleanup does
+
+To find out which branches are gone on the remote, cleanup uses the output of `git branch -vv`.
+
+```shell script
+$ git branch -vv
+  * master		34a234a [origin/master] Merged some features
+    feature/1	34a234a [origin/feature/1: gone] Implemented endpoints
+    feature/2	3fc2e37 [origin/feature/2: gone] Added CLI command
+```
+
+You've probably been doing the same thing, deleting all gone branches manually one by one. cleanup does the exact same thing, but automated and far more flexible.
 
 ## <img src="https://sternentstehung.de/cleanup-dot.png"> Installation
 
