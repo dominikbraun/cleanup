@@ -61,12 +61,12 @@ $ cleanup branches --has-multiple-repos projects
 
 To find out which branches are gone on the remote, cleanup uses the output of `git branch -vv`.
 
-```shell script
+````shell script
 $ git branch -vv
-  * master		34a234a [origin/master] Merged some features
-    feature/1	34a234a [origin/feature/1: gone] Implemented endpoints
-    feature/2	3fc2e37 [origin/feature/2: gone] Added CLI flags
-```
+* master		34a234a [origin/master] Merged some features
+  feature/1	34a234a [origin/feature/1: gone] Implemented endpoints
+  feature/2	3fc2e37 [origin/feature/2: gone] Added CLI flags
+````
 
 Based on that output, cleanup performs `git branch -d <branch>` on all gone branches. Maybe you've been doing the same thing manually for each branch in each repository.
 

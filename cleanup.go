@@ -66,6 +66,7 @@ func Branches(path string, options *BranchesOptions, w io.Writer) error {
 	}
 
 	exclude := strings.Split(options.Exclude, ",")
+	exclude = append(exclude, "master")
 
 	for _, repo := range repositories {
 		deleted, err := deleteBranches(repo, options.DryRun, exclude)
