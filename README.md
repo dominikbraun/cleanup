@@ -68,7 +68,7 @@ $ git branch -vv
     feature/2	3fc2e37 [origin/feature/2: gone] Added CLI command
 ```
 
-You've probably been doing the same thing, deleting all gone branches manually one by one. cleanup does this for you automatically and far more flexible.
+Based on that output, cleanup performs `git branch -d <branch>` on all gone branches. Maybe you've been doing the same thing manually for each branch in each repository.
 
 ## <img src="https://sternentstehung.de/cleanup-dot.png"> Installation
 
