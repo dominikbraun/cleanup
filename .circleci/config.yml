@@ -8,6 +8,10 @@ executors:
           CGO_ENABLED: 0
           GO111MODULE: "on"
 
+  github-container:
+    docker:
+      - image: cibuilds/github:0.10
+
 jobs:
   cleanup-test:
     executor: go-container
@@ -54,6 +58,11 @@ jobs:
       - run:
           name: Build the cleanup binary
           command: make build
+
+  release-github:
+    executor: github-container
+    steps:
+      -
 
 workflows:
   version: 2
