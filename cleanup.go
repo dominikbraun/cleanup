@@ -39,6 +39,7 @@ const (
 	fmtRemovalPreview      string = "\t- Will delete %s\n"
 	fmtRemovalFailure      string = "\t- Failed to delete %s: %s\n"
 	fmtVersion             string = "cleanup version %s\n"
+	fmtQuietVersion        string = "%s\n"
 )
 
 // RepositoryPath describes the filesystem path for a repository.
@@ -116,7 +117,7 @@ func Version(options *VersionOptions, w io.Writer) error {
 
 	switch {
 	case options.Quiet:
-		output = fmt.Sprintf("%s", version)
+		output = fmt.Sprintf(fmtQuietVersion, version)
 	default:
 		output = fmt.Sprintf(fmtVersion, version)
 	}
