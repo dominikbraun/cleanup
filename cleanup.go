@@ -38,6 +38,7 @@ const (
 	fmtRemovalSuccess      string = "\t- Deleted %s\n"
 	fmtRemovalPreview      string = "\t- Will delete %s\n"
 	fmtRemovalFailure      string = "\t- Failed to delete %s: %s\n"
+	fmtVersion             string = "cleanup version %s\n"
 )
 
 // RepositoryPath describes the filesystem path for a repository.
@@ -49,6 +50,11 @@ type BranchesOptions struct {
 	Force            bool
 	DryRun           bool
 	Exclude          string
+}
+
+// VersionOptions are user-defined options for the `version` command.
+type VersionOptions struct {
+	Quiet bool
 }
 
 // Branches is the entry point for the `branch` command and deletes all
@@ -100,6 +106,22 @@ func Branches(path string, options *BranchesOptions, w io.Writer) error {
 			_, _ = w.Write([]byte(output))
 		}
 	}
+
+	return nil
+}
+
+// Version displays version information for cleanup.
+func Version(options *VersionOptions, w io.Writer) error {
+	var output string
+
+	switch {
+	case options.Quiet:
+		output = fmt.Sprintf("%s", version)
+	default:
+		output = fmt.Sprintf(fmtVersion, version)
+	}
+
+	_, _ = w.Write([]byte(output))
 
 	return nil
 }
