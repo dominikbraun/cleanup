@@ -89,7 +89,7 @@ workflows:
       - gh-release:
           requires:
             - cleanup-build
-          filter:
+          filters:
             branches:
               ignore: /.*/
             tags:
