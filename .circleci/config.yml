@@ -8,6 +8,10 @@ executors:
           CGO_ENABLED: 0
           GO111MODULE: "on"
 
+  github-container:
+    docker:
+      - image: cibuilds/github:0.10
+
 jobs:
   cleanup-test:
     executor: go-container
@@ -54,6 +58,25 @@ jobs:
       - run:
           name: Build the cleanup binary
           command: make build
+      - persist_to_workspace:
+          root: .target
+          paths:
+            - cleanup
+
+  gh-release:
+    executor: github-container
+    steps:
+      - attach_workspace:
+          at: /tmp/.target
+      - run:
+          name: Publish GitHub release
+          command: |
+            VERSION=$(cleanup --quiet version)
+            ghr -t ${GITHUB_TOKEN} \
+                -u ${CIRCLE_PROJECT_USERNAME} \
+                -r ${CIRCLE_PROJECT_REPONAME} \
+                -c ${CIRCLE_SHA1} \
+                -delete ${VERSION} ./artifacts/
 
 workflows:
   version: 2
@@ -63,3 +86,11 @@ workflows:
       - cleanup-test:
           requires:
             -  cleanup-build
+      - gh-release:
+          requires:
+            - cleanup-build
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^\d+\.\d+\.\d+$/
