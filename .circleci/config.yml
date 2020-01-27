@@ -58,16 +58,55 @@ jobs:
       - run:
           name: Build the cleanup binary
           command: make build
-      - persist_to_workspace:
-          root: .target
+
+  cleanup-release-build:
+    executor: go-container
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ .Branch }}-{{ checksum "go.mod" }}
+            - go-mod-v1-{{ .Branch }}-
+            - go-mod-v1-
+            - git-v1-{{ .Branch }}-{{ .Revision }}
+            - git-v1-{{ .Branch }}
+      - run: go mod download
+      - save_cache:
+          key: go-mod-v1-{{ .Branch }}-{{ checksum "go.mod" }}
           paths:
-            - cleanup
+            - /go/pkg
+      - save_cache:
+          key: git-v1-{{ .Branch }}-{{ .Revision }}
+          paths:
+            - ".git"
+      - run: mkdir artifacts
+      - run:
+          name: Build and pack cleanup for Linux
+          command: |
+            GOOS=linux GOARCH=amd64 go build -v -o .target/cleanup .
+            tar -czf artifacts/cleanup-linux-amd64.tar.gz .target/cleanup
+      - run:
+          name: Build and pack cleanup for macOS
+          command: |
+            GOOS=darwin GOARCH=amd64 go build -v -o .target/cleanup .
+            tar -czf artifacts/cleanup-macos-amd64.tar.gz .target/cleanup
+      - run:
+          name: Build and pack cleanup for Windows
+          command: |
+            GOOS=windows GOARCH=amd64 go build -v -o .target/cleanup .
+            zip artifacts/cleanup-windows-amd64.zip .target/cleanup
+      - persist_to_workspace:
+          root: artifacts
+          paths:
+            - cleanup-linux-amd64.tar.gz
+            - cleanup-macos-amd64.tar.gz
+            - cleanup-windows-amd64.zip
 
   gh-release:
     executor: github-container
     steps:
       - attach_workspace:
-          at: /tmp/.target
+          at: /tmp/artifacts
       - run:
           name: Publish GitHub release
           command: |
@@ -76,7 +115,7 @@ jobs:
                 -u ${CIRCLE_PROJECT_USERNAME} \
                 -r ${CIRCLE_PROJECT_REPONAME} \
                 -c ${CIRCLE_SHA1} \
-                -delete ${VERSION} ./artifacts/
+                -delete ${VERSION} artifacts/
 
 workflows:
   version: 2
@@ -85,12 +124,15 @@ workflows:
       - cleanup-build
       - cleanup-test:
           requires:
-            -  cleanup-build
-      - gh-release:
+            - cleanup-build
+      - cleanup-release-build:
           requires:
             - cleanup-build
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^\d+\.\d+\.\d+$/
+            filters:
+              branches:
+                ignore: /.*/
+              tags:
+                only: /^\d+\.\d+\.\d+$/
+      - gh-release:
+          requires:
+            - cleanup-release-build
