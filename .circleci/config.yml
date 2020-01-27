@@ -97,15 +97,15 @@ jobs:
             GOOS=windows GOARCH=amd64 go build -v -o .target/cleanup .
             zip artifacts/cleanup-windows-amd64.zip .target/cleanup
       - persist_to_workspace:
-          root: artifacts
+          root: /tmp/artifacts
           paths:
-            - cleanup-linux-amd64.tar.gz
-            - cleanup-macos-amd64.tar.gz
-            - cleanup-windows-amd64.zip
+            - artifacts/cleanup-linux-amd64.tar.gz
+            - artifacts/cleanup-macos-amd64.tar.gz
+            - artifacts/cleanup-windows-amd64.zip
       - persist_to_workspace:
-          root: local-bin
+          root: /tmp/local-bin
           paths:
-            - cleanup
+            - local-bin/cleanup
 
   gh-release:
     executor: github-container
