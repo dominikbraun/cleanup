@@ -113,7 +113,7 @@ jobs:
       - attach_workspace:
           at: /tmp/artifacts
       - attach_workspace:
-          at: /tmp/local-bin
+          at: /tmp/local-bin2
       - run:
           name: Publish GitHub release
           command: |
