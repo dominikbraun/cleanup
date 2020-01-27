@@ -114,6 +114,7 @@ jobs:
           at: /tmp/artifacts
       - attach_workspace:
           at: /tmp/local-bin
+      - run: echo $(ls -la)
       - run:
           name: Publish GitHub release
           command: |
@@ -134,7 +135,7 @@ workflows:
             - cleanup-build
       - cleanup-release-build:
           requires:
-            - cleanup-build
+            - cleanup-test
           filters:
             #branches:
               #ignore: /.*/
