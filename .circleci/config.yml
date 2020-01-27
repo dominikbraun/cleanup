@@ -129,8 +129,8 @@ workflows:
           requires:
             - cleanup-build
           filters:
-            branches:
-              ignore: /.*/
+            #branches:
+              #ignore: /.*/
             tags:
               only: /^\d+\.\d+\.\d+$/
       - gh-release:
