@@ -128,11 +128,11 @@ workflows:
       - cleanup-release-build:
           requires:
             - cleanup-build
-            filters:
-              branches:
-                ignore: /.*/
-              tags:
-                only: /^\d+\.\d+\.\d+$/
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^\d+\.\d+\.\d+$/
       - gh-release:
           requires:
             - cleanup-release-build
