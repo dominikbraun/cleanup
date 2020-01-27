@@ -96,7 +96,7 @@ jobs:
           command: |
             GOOS=windows GOARCH=amd64 go build -v -o .target/cleanup .
             zip artifacts/cleanup-windows-amd64.zip .target/cleanup
-      - run: mkdir /tmp/artifacts && /tmp/local-bin
+      - run: mkdir /tmp/artifacts && mkdir /tmp/local-bin
       - persist_to_workspace:
           root: /tmp/artifacts
           paths:
