@@ -21,7 +21,7 @@ import (
 	"os"
 )
 
-const version string = "0.1.6"
+const version string = "0.1.7"
 
 // main builds the CLI commands and executes the desired sub-command.
 func main() {
