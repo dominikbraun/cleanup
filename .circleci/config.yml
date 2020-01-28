@@ -115,7 +115,7 @@ jobs:
       - attach_workspace:
           at: /tmp/local-bin
       - run: mkdir artifacts
-      - run: cp /tmp/artifacts/ artifacts
+      - run: cp /tmp/artifacts/* artifacts/
       - run: cp /tmp/local-bin/cleanup .
       - run:
           name: Publish GitHub release
