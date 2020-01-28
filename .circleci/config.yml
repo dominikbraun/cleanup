@@ -79,34 +79,33 @@ jobs:
           key: git-v1-{{ .Branch }}-{{ .Revision }}
           paths:
             - ".git"
-      - run: mkdir artifacts && mkdir local-bin
+      - run: mkdir /tmp/artifacts && mkdir /tmp/local-bin
       - run:
           name: Build and pack cleanup for Linux
           command: |
             GOOS=linux GOARCH=amd64 go build -v -o .target/cleanup .
-            cp .target/cleanup local-bin/cleanup
-            tar -czf artifacts/cleanup-linux-amd64.tar.gz .target/cleanup
+            cp .target/cleanup /tmp/local-bin/cleanup
+            tar -czf /tmp/artifacts/cleanup-linux-amd64.tar.gz .target/cleanup
       - run:
           name: Build and pack cleanup for macOS
           command: |
             GOOS=darwin GOARCH=amd64 go build -v -o .target/cleanup .
-            tar -czf artifacts/cleanup-macos-amd64.tar.gz .target/cleanup
+            tar -czf /tmp/artifacts/cleanup-macos-amd64.tar.gz .target/cleanup
       - run:
           name: Build and pack cleanup for Windows
           command: |
             GOOS=windows GOARCH=amd64 go build -v -o .target/cleanup .
-            zip artifacts/cleanup-windows-amd64.zip .target/cleanup
-      - run: mkdir /tmp/artifacts && mkdir /tmp/local-bin
+            zip /tmp/artifacts/cleanup-windows-amd64.zip .target/cleanup
       - persist_to_workspace:
           root: /tmp/artifacts
           paths:
-            - artifacts/cleanup-linux-amd64.tar.gz
-            - artifacts/cleanup-macos-amd64.tar.gz
-            - artifacts/cleanup-windows-amd64.zip
+            - cleanup-linux-amd64.tar.gz
+            - cleanup-macos-amd64.tar.gz
+            - cleanup-windows-amd64.zip
       - persist_to_workspace:
           root: /tmp/local-bin
           paths:
-            - local-bin/cleanup
+            - cleanup
 
   gh-release:
     executor: github-container
