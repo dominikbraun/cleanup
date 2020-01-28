@@ -130,7 +130,7 @@ workflows:
   cleanup-ci:
     jobs:
       - cleanup-build
-      - cleanup-test:
+      - cleanup-test
       - cleanup-release-build:
           requires:
             - cleanup-build
