@@ -118,7 +118,7 @@ jobs:
       - run:
           name: Publish GitHub release
           command: |
-            VERSION=$(./cleanup version --quiet)
+            VERSION="v$(./cleanup version --quiet)"
             echo "Will release version ${VERSION}"
             ghr -t ${GITHUB_TOKEN} \
                 -u ${CIRCLE_PROJECT_USERNAME} \
