@@ -124,8 +124,7 @@ jobs:
                 -u ${CIRCLE_PROJECT_USERNAME} \
                 -r ${CIRCLE_PROJECT_REPONAME} \
                 -c ${CIRCLE_SHA1} \
-                -delete \
-                ${VERSION} /tmp/artifacts/
+                v.0.1.9 /tmp/artifacts/
 
 workflows:
   version: 2
