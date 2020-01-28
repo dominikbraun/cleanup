@@ -115,7 +115,6 @@ jobs:
       - attach_workspace:
           at: /tmp/local-bin
       - run: cp /tmp/local-bin/cleanup .
-      - run: echo $(ls -la)
       - run:
           name: Publish GitHub release
           command: |
@@ -132,10 +131,9 @@ workflows:
     jobs:
       - cleanup-build
       - cleanup-test:
-          requires:
-            - cleanup-build
       - cleanup-release-build:
           requires:
+            - cleanup-build
             - cleanup-test
           filters:
             #branches:
