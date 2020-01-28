@@ -114,11 +114,12 @@ jobs:
           at: /tmp/artifacts
       - attach_workspace:
           at: /tmp/local-bin
+      - run: cp /tmp/local-bin/cleanup .
       - run: echo $(ls -la)
       - run:
           name: Publish GitHub release
           command: |
-            VERSION=$(sh /tmp/local-bin/cleanup --quiet version)
+            VERSION=$(./cleanup --quiet version)
             ghr -t ${GITHUB_TOKEN} \
                 -u ${CIRCLE_PROJECT_USERNAME} \
                 -r ${CIRCLE_PROJECT_REPONAME} \
