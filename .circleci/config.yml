@@ -117,12 +117,13 @@ jobs:
       - run: mkdir artifacts
       - run: cp /tmp/artifacts/* artifacts/
       - run: cp /tmp/local-bin/cleanup .
+      - run: ls -l artifacts
       - run:
           name: Publish GitHub release
           command: |
             VERSION=$(./cleanup version --quiet)
             echo "Will release version $VERSION"
-            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} v0.1.9 artifacts
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} v0.1.9 artifacts/
 
 workflows:
   version: 2
