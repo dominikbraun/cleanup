@@ -35,3 +35,36 @@ func Test_readBranchNames(t *testing.T) {
 		t.Errorf("Expected branch %s, got %s", "feature/1", branches[0])
 	}
 }
+
+// Test_isExcluded tests if isExcluded checks excluded branches correctly.
+func Test_isExcluded(t *testing.T) {
+	type assertion struct {
+		branch   string
+		exclude  []string
+		expected bool
+	}
+
+	assertions := []assertion{
+		{
+			branch:   "feature/1",
+			exclude:  []string{" feature/0 ", "feature/2", "my-fix"},
+			expected: false,
+		},
+		{
+			branch:   "ci-setup",
+			exclude:  []string{"feature/1", "another-fix", "ci-setup"},
+			expected: true,
+		},
+		{
+			branch:   "feature/2",
+			exclude:  []string{"feature/1", " feature/2", "feature/3 "},
+			expected: true,
+		},
+	}
+
+	for _, a := range assertions {
+		if result := isExcluded(a.branch, a.exclude); result != a.expected {
+			t.Errorf("%s: expected %v, got %v", a.branch, a.expected, result)
+		}
+	}
+}

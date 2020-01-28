@@ -33,10 +33,13 @@ const (
 
 const (
 	fmtRepositoryErr       string = "Error at `%s`: %s\n"
+	fmtNoBranchesFound     string = "No gone branches found at `%s`.\n"
 	fmtGoneBranchesHeading string = "Found gone branches at `%s`:\n"
 	fmtRemovalSuccess      string = "\t- Deleted %s\n"
 	fmtRemovalPreview      string = "\t- Will delete %s\n"
 	fmtRemovalFailure      string = "\t- Failed to delete %s: %s\n"
+	fmtVersion             string = "cleanup version %s\n"
+	fmtQuietVersion        string = "%s\n"
 )
 
 // RepositoryPath describes the filesystem path for a repository.
@@ -48,6 +51,11 @@ type BranchesOptions struct {
 	Force            bool
 	DryRun           bool
 	Exclude          string
+}
+
+// VersionOptions are user-defined options for the `version` command.
+type VersionOptions struct {
+	Quiet bool
 }
 
 // Branches is the entry point for the `branch` command and deletes all
@@ -65,15 +73,19 @@ func Branches(path string, options *BranchesOptions, w io.Writer) error {
 	}
 
 	exclude := strings.Split(options.Exclude, ",")
+	exclude = append(exclude, "master")
 
 	for _, repo := range repositories {
 		deleted, err := deleteBranches(repo, options.DryRun, exclude)
 		if err != nil {
 			output := fmt.Sprintf(fmtRepositoryErr, repo, err.Error())
 			_, _ = w.Write([]byte(output))
+			continue
 		}
 
 		if len(deleted) == 0 {
+			output := fmt.Sprintf(fmtNoBranchesFound, repo)
+			_, _ = w.Write([]byte(output))
 			continue
 		}
 
@@ -95,6 +107,22 @@ func Branches(path string, options *BranchesOptions, w io.Writer) error {
 			_, _ = w.Write([]byte(output))
 		}
 	}
+
+	return nil
+}
+
+// Version displays version information for cleanup.
+func Version(options *VersionOptions, w io.Writer) error {
+	var output string
+
+	switch {
+	case options.Quiet:
+		output = fmt.Sprintf(fmtQuietVersion, version)
+	default:
+		output = fmt.Sprintf(fmtVersion, version)
+	}
+
+	_, _ = w.Write([]byte(output))
 
 	return nil
 }
@@ -181,16 +209,16 @@ func readBranchNames(buf []byte, filter string) []string {
 func repositoryPaths(path string, hasMultipleRepos bool) ([]RepositoryPath, error) {
 	paths := make([]RepositoryPath, 0)
 
-	if !hasMultipleRepos {
-		isRepo, err := isRepository(RepositoryPath(path))
-		if err != nil {
-			return nil, err
-		}
+	isRepo, err := isRepository(RepositoryPath(path))
+	if err != nil {
+		return nil, err
+	}
+	if isRepo {
+		paths = append(paths, RepositoryPath(path))
+	}
 
-		if isRepo {
-			paths = append(paths, RepositoryPath(path))
-			return paths, nil
-		}
+	if !hasMultipleRepos {
+		return paths, nil
 	}
 
 	content, err := ioutil.ReadDir(path)

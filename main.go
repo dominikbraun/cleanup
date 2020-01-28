@@ -21,15 +21,19 @@ import (
 	"os"
 )
 
+const version string = "0.1.7"
+
 // main builds the CLI commands and executes the desired sub-command.
 func main() {
 	var branchesOptions BranchesOptions
+	var versionOptions VersionOptions
 
 	cleanup := &cobra.Command{
-		Use:   "cleanup",
-		Short: `💫 Remove gone Git branches with ease.`,
+		Use:     "cleanup",
+		Aliases: []string{"git-cleanup"},
+		Short:   `💫 Remove gone Git branches with ease.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return nil
+			return cmd.Help()
 		},
 	}
 
@@ -51,7 +55,20 @@ func main() {
 	branches.Flags().StringVarP(&branchesOptions.Exclude, "exclude",
 		"e", "", `Exclude one or more branches from deletion`)
 
+	version := &cobra.Command{
+		Use:   "version",
+		Short: `Display version information`,
+		Args:  cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return Version(&versionOptions, os.Stdout)
+		},
+	}
+
+	version.Flags().BoolVarP(&versionOptions.Quiet, "quiet",
+		"q", false, `Only print the version number`)
+
 	cleanup.AddCommand(branches)
+	cleanup.AddCommand(version)
 
 	if err := cleanup.Execute(); err != nil {
 		log.Fatal(err)
