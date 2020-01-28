@@ -114,6 +114,8 @@ jobs:
           at: /tmp/artifacts
       - attach_workspace:
           at: /tmp/local-bin
+      - run: mkdir artifacts
+      - run: cp /tmp/artifacts/ artifacts/
       - run: cp /tmp/local-bin/cleanup .
       - run:
           name: Publish GitHub release
@@ -124,7 +126,7 @@ jobs:
                 -u ${CIRCLE_PROJECT_USERNAME} \
                 -r ${CIRCLE_PROJECT_REPONAME} \
                 -c ${CIRCLE_SHA1} \
-                v.0.1.9 /tmp/artifacts/
+                v.0.1.9 artifacts/
 
 workflows:
   version: 2
