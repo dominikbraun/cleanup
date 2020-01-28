@@ -118,7 +118,7 @@ jobs:
       - run:
           name: Publish GitHub release
           command: |
-            VERSION=$(sh local-bin/cleanup --quiet version)
+            VERSION=$(sh /tmp/local-bin/cleanup --quiet version)
             ghr -t ${GITHUB_TOKEN} \
                 -u ${CIRCLE_PROJECT_USERNAME} \
                 -r ${CIRCLE_PROJECT_REPONAME} \
