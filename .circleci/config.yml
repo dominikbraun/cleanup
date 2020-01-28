@@ -120,13 +120,13 @@ jobs:
       - run:
           name: Publish GitHub release
           command: |
-            VERSION="v$(./cleanup version --quiet)"
+            VERSION=$(./cleanup version --quiet)
             echo "Will release version $VERSION"
             ghr -t ${GITHUB_TOKEN} \
                 -u ${CIRCLE_PROJECT_USERNAME} \
                 -r ${CIRCLE_PROJECT_REPONAME} \
                 -c ${CIRCLE_SHA1} \
-                v.0.1.9 artifacts/
+                v0.1.9 artifacts/
 
 workflows:
   version: 2
