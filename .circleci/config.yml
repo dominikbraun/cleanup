@@ -10,7 +10,7 @@ executors:
 
   github-container:
     docker:
-      - image: circleci/golang:1.8
+      - image: circleci/golang:1.13
 
 jobs:
   cleanup-test:
