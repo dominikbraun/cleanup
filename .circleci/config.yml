@@ -10,7 +10,7 @@ executors:
 
   github-container:
     docker:
-      - image: cibuilds/github:0.10
+      - image: circleci/golang:1.8
 
 jobs:
   cleanup-test:
@@ -120,8 +120,9 @@ jobs:
       - run:
           name: Publish GitHub release
           command: |
+            go get github.com/tcnksm/ghr
             VERSION=$(./cleanup version --quiet)
-            ghr -t=${GITHUB_TOKEN} -u=${CIRCLE_PROJECT_USERNAME} -r=${CIRCLE_PROJECT_REPONAME} -c=${CIRCLE_SHA1} "v0.1.9" artifacts/
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete "v0.1.9" artifacts/
 
 workflows:
   version: 2
