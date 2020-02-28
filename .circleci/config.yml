@@ -10,9 +10,11 @@ executors:
 
   github-container:
     docker:
-      - image: cibuilds/github:0.10
+      - image: circleci/golang:1.13
 
 jobs:
+  # cleanup-test runs all unit tests. The `go test` command to run them
+  # can be found in the Makefile. This job merely executes `make test`.
   cleanup-test:
     executor: go-container
     steps:
@@ -35,6 +37,9 @@ jobs:
             - ".git"
       - run: make test
 
+  # cleanup-build downloads all dependencies and performs a simple build.
+  # The `go build` command can be found in the Makefile. This job merely
+  # executes `make build`.
   cleanup-build:
     executor: go-container
     steps:
@@ -59,6 +64,14 @@ jobs:
           name: Build the cleanup binary
           command: make build
 
+  # cleanup-release-build builds the actual artifacts for all supported
+  # platforms. These binaries are tarred/zipped, while the archive has
+  # the name of the platform and architecture.
+  #
+  # These archives are saved to the workspace to access them in other
+  # jobs like the release job. The Linux binary is copied and persisted
+  # to an additional workspace directory as well. This binary can be
+  # used to obtain the cleanup version for creating the release.
   cleanup-release-build:
     executor: go-container
     steps:
@@ -80,33 +93,47 @@ jobs:
           paths:
             - ".git"
       - run: mkdir /tmp/artifacts && mkdir /tmp/local-bin
+      # Build cleanup for Linux/AMD64. This binary will be copied and
+      # persisted for later usage in the CI workflow.
       - run:
           name: Build and pack cleanup for Linux
           command: |
             GOOS=linux GOARCH=amd64 go build -v -o .target/cleanup .
             cp .target/cleanup /tmp/local-bin/cleanup
             tar -czf /tmp/artifacts/cleanup-linux-amd64.tar.gz .target/cleanup
+      # Build cleanup for macOS/amd64.
       - run:
           name: Build and pack cleanup for macOS
           command: |
             GOOS=darwin GOARCH=amd64 go build -v -o .target/cleanup .
             tar -czf /tmp/artifacts/cleanup-macos-amd64.tar.gz .target/cleanup
+      # Build cleanup for Windows/amd64.
       - run:
           name: Build and pack cleanup for Windows
           command: |
             GOOS=windows GOARCH=amd64 go build -v -o .target/cleanup .
             zip /tmp/artifacts/cleanup-windows-amd64.zip .target/cleanup
+      # Persist the artifact archives to the workspace for later
+      # usage. All archives listed here will be released.
       - persist_to_workspace:
           root: /tmp/artifacts
           paths:
             - cleanup-linux-amd64.tar.gz
             - cleanup-macos-amd64.tar.gz
             - cleanup-windows-amd64.zip
+      # Persist a copied Linux binary to the workspace. This
+      # binary can be used for obtaining the cleanup version.
       - persist_to_workspace:
           root: /tmp/local-bin
           paths:
             - cleanup
 
+  # gh-release performs the actual release to GitHub. This creates
+  # a new release and uploads the artifacts that have been persisted
+  # to `/tmp/artifacts` before.
+  #
+  # All required GitHub credentials are delivered as environment
+  # variables from CircleCI.
   gh-release:
     executor: github-container
     steps:
@@ -114,30 +141,34 @@ jobs:
           at: /tmp/artifacts
       - attach_workspace:
           at: /tmp/local-bin
+      - run: mkdir artifacts && cp /tmp/artifacts/* artifacts/
       - run: cp /tmp/local-bin/cleanup .
+      - run: VERSION=$(./cleanup version --quiet)
       - run:
           name: Publish GitHub release
           command: |
+            go get github.com/tcnksm/ghr
             VERSION=$(./cleanup version --quiet)
-            ghr -t ${GITHUB_TOKEN} \
-                -u ${CIRCLE_PROJECT_USERNAME} \
-                -r ${CIRCLE_PROJECT_REPONAME} \
-                -c ${CIRCLE_SHA1} \
-                -delete ${VERSION} artifacts/
+            ghr -t "$GITHUB_TOKEN" \
+                -u "$CIRCLE_PROJECT_USERNAME" \
+                -r "$CIRCLE_PROJECT_REPONAME" \
+                -c "$CIRCLE_SHA1" \
+                -n "cleanup v$VERSION" \
+                $VERSION artifacts/
 
 workflows:
   version: 2
   cleanup-ci:
     jobs:
       - cleanup-build
-      - cleanup-test:
+      - cleanup-test
       - cleanup-release-build:
           requires:
             - cleanup-build
             - cleanup-test
           filters:
-            #branches:
-              #ignore: /.*/
+            branches:
+              ignore: /.*/
             tags:
               only: /^\d+\.\d+\.\d+$/
       - gh-release:
