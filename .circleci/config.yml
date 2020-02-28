@@ -154,7 +154,7 @@ jobs:
                 -r "$CIRCLE_PROJECT_REPONAME" \
                 -c "$CIRCLE_SHA1" \
                 -n "cleanup v$VERSION" \
-                v0.1.9 artifacts/
+                $VERSION artifacts/
 
 workflows:
   version: 2
