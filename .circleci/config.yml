@@ -167,8 +167,6 @@ workflows:
             - cleanup-build
             - cleanup-test
           filters:
-            branches:
-              ignore: /.*/
             tags:
               only: /^\d+\.\d+\.\d+$/
       - gh-release:
