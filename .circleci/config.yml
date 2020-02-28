@@ -112,7 +112,7 @@ jobs:
           name: Build and pack cleanup for Windows
           command: |
             GOOS=windows GOARCH=amd64 go build -v -o .target/cleanup.exe .
-            zip -czf /tmp/artifacts/cleanup-windows-amd64.zip .target/cleanup.exe
+            zip /tmp/artifacts/cleanup-windows-amd64.zip .target/cleanup.exe
       # Persist the artifact archives to the workspace for later
       # usage. All archives listed here will be released.
       - persist_to_workspace:
