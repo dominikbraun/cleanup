@@ -157,8 +157,9 @@ jobs:
 #            echo $CIRCLE_SHA1
 #            ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME -c $CIRCLE_SHA1 v0.1.9 artifacts/
       - github-release/create:
-          tag: $(./cleanup version --quiet)
-          title: "cleanup v$(./cleanup version --quiet)"
+          tag: $VERSION
+          title: "cleanup v$VERSION"
+          description: "Release of cleanup $VERSION"
           file-path: artifacts/
 
 workflows:
