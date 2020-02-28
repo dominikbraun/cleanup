@@ -147,15 +147,6 @@ jobs:
       - run: mkdir artifacts && cp /tmp/artifacts/* artifacts/
       - run: cp /tmp/local-bin/cleanup .
       - run: VERSION=$(./cleanup version --quiet)
-#      - run:
-#          name: Publish GitHub release
-#          command: |
-#            go get github.com/dominikbraun/ghr
-#            VERSION=$(./cleanup version --quiet)
-#            echo "PROJECT_NAME: $CIRCLE_PROJECT_REPONAME"
-#            echo $GITHUB_TOKEN
-#            echo $CIRCLE_SHA1
-#            ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME -c $CIRCLE_SHA1 v0.1.9 artifacts/
       - github-release/create:
           tag: $VERSION
           title: "cleanup v$VERSION"
