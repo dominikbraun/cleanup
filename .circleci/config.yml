@@ -147,7 +147,7 @@ jobs:
       - run:
           name: Publish GitHub release
           command: |
-            go get github.com/dominikbraun/ghr
+            go get github.com/tcnksm/ghr
             VERSION=$(./cleanup version --quiet)
             echo "PROJECT_NAME: $CIRCLE_PROJECT_REPONAME"
             echo $GITHUB_TOKEN
