@@ -63,7 +63,7 @@ To find out which branches are gone on the remote, cleanup uses the output of `g
 
 ````shell script
 $ git branch -vv
-* master		34a234a [origin/master] Merged some features
+* master	34a234a [origin/master] Merged some features
   feature/1	34a234a [origin/feature/1: gone] Implemented endpoints
   feature/2	3fc2e37 [origin/feature/2: gone] Added CLI flags
 ````
