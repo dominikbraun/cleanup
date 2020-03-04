@@ -143,12 +143,16 @@ jobs:
           at: /tmp/local-bin
       - run: mkdir artifacts && cp /tmp/artifacts/* artifacts/
       - run: cp /tmp/local-bin/cleanup .
+      # Use the helper cleanup binary to obtain the cleanup version.
       - run: VERSION=$(./cleanup version --quiet)
+      # The helper cleanup binary used to be contained in the release
+      # even though ghr should only upload files from the artifacts
+      # directory. This removes the helper binary before the release.
+      - run: rm cleanup
       - run:
           name: Publish GitHub release
           command: |
             go get github.com/tcnksm/ghr
-            VERSION=$(./cleanup version --quiet)
             ghr -t "$GITHUB_TOKEN" \
                 -u "$CIRCLE_PROJECT_USERNAME" \
                 -r "$CIRCLE_PROJECT_REPONAME" \
