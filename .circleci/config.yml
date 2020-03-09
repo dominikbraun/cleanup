@@ -173,6 +173,8 @@ workflows:
           filters:
             tags:
               only: /^\d+\.\d+\.\d+$/
+            branches:
+              ignore: /.*/
       - gh-release:
           requires:
             - cleanup-release-build
