@@ -111,8 +111,8 @@ jobs:
       - run:
           name: Build and pack cleanup for Windows
           command: |
-            GOOS=windows GOARCH=amd64 go build -v -o .target/cleanup .
-            zip /tmp/artifacts/cleanup-windows-amd64.zip .target/cleanup
+            GOOS=windows GOARCH=amd64 go build -v -o .target/cleanup.exe .
+            zip /tmp/artifacts/cleanup-windows-amd64.zip .target/cleanup.exe
       # Persist the artifact archives to the workspace for later
       # usage. All archives listed here will be released.
       - persist_to_workspace:
@@ -143,12 +143,16 @@ jobs:
           at: /tmp/local-bin
       - run: mkdir artifacts && cp /tmp/artifacts/* artifacts/
       - run: cp /tmp/local-bin/cleanup .
+      # Use the helper cleanup binary to obtain the cleanup version.
       - run: VERSION=$(./cleanup version --quiet)
+      # The helper cleanup binary used to be contained in the release
+      # even though ghr should only upload files from the artifacts
+      # directory. This removes the helper binary before the release.
+      - run: rm cleanup
       - run:
           name: Publish GitHub release
           command: |
             go get github.com/tcnksm/ghr
-            VERSION=$(./cleanup version --quiet)
             ghr -t "$GITHUB_TOKEN" \
                 -u "$CIRCLE_PROJECT_USERNAME" \
                 -r "$CIRCLE_PROJECT_REPONAME" \
@@ -167,10 +171,10 @@ workflows:
             - cleanup-build
             - cleanup-test
           filters:
-            #branches:
-              #ignore: /.*/
             tags:
               only: /^\d+\.\d+\.\d+$/
+            branches:
+              ignore: /.*/
       - gh-release:
           requires:
             - cleanup-release-build
