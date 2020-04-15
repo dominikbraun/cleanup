@@ -15,7 +15,10 @@
 // Package main provides the cleanup executable and its implementation.
 package main
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 // Test_readBranchNames tests if readBranchNames returns the correct gone
 // branch names for a given `git branch -vv` output.
@@ -25,7 +28,9 @@ func Test_readBranchNames(t *testing.T) {
   feature/1 34a234a [origin/feature/1: gone] Implemented endpoints
   feature/2 3fc2e37 [origin/feature/2: behind 71] Added CLI command`
 
-	branches := readBranchNames([]byte(gitOutput), ": gone]")
+	branches := readBranchNames([]byte(gitOutput), func(line string) bool {
+		return strings.Contains(line, searchExpr)
+	})
 
 	if len(branches) != 1 {
 		t.Errorf("Expected %v branches, got %v", 1, len(branches))
