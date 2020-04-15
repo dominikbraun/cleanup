@@ -1,17 +1,3 @@
-// Copyright 2019 The cleanup authors. All rights reserved.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     https://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 // Package main provides the cleanup executable and its implementation.
 package main
 
@@ -31,21 +17,11 @@ const (
 	searchExpr string = ": gone]"
 )
 
-const (
-	fmtRepositoryErr       string = "Error at `%s`: %s\n"
-	fmtNoBranchesFound     string = "No gone branches found at `%s`.\n"
-	fmtGoneBranchesHeading string = "Found gone branches at `%s`:\n"
-	fmtRemovalSuccess      string = "\t- Deleted %s\n"
-	fmtRemovalPreview      string = "\t- Will delete %s\n"
-	fmtRemovalFailure      string = "\t- Failed to delete %s: %s\n"
-	fmtVersion             string = "cleanup version %s\n"
-	fmtQuietVersion        string = "%s\n"
-)
-
 // RepositoryPath describes the filesystem path for a repository.
 type RepositoryPath string
 
-// BranchesOptions are user-defined options for the `branch` command.
+// BranchesOptions are user-defined options for the `branches` command
+// which will be instantiated and populated by the CLI.
 type BranchesOptions struct {
 	HasMultipleRepos bool
 	Force            bool
@@ -53,22 +29,24 @@ type BranchesOptions struct {
 	Exclude          string
 }
 
-// VersionOptions are user-defined options for the `version` command.
+// VersionOptions are user-defined options for the `version` command
+// which will be instantiated and populated by the CLI.
 type VersionOptions struct {
 	Quiet bool
 }
 
-// Branches is the entry point for the `branch` command and deletes all
-// gone Git branches under a specified path. This path either has to be
-// a repository or a root directory that contains multiple repositories.
+// RunBranches is the entry point for the `branch` command and deletes
+// all gone Git branches under a specified path. This path either has
+// to be a repository or a root directory that contains multiple repos.
 //
 // Returns an error if no Git repository can be found in the path.
-func Branches(path string, options *BranchesOptions, w io.Writer) error {
+func RunBranches(path string, options *BranchesOptions, w io.Writer) error {
 	repositories, err := repositoryPaths(path, options.HasMultipleRepos)
-
 	if err != nil {
 		return err
-	} else if len(repositories) == 0 {
+	}
+
+	if len(repositories) == 0 {
 		return errors.New("no Git repository found")
 	}
 
@@ -78,18 +56,18 @@ func Branches(path string, options *BranchesOptions, w io.Writer) error {
 	for _, repo := range repositories {
 		deleted, err := deleteBranches(repo, options.DryRun, exclude)
 		if err != nil {
-			output := fmt.Sprintf(fmtRepositoryErr, repo, err.Error())
+			output := fmt.Sprintf("Error in repository %s: %s\n", repo, err.Error())
 			_, _ = w.Write([]byte(output))
 			continue
 		}
 
 		if len(deleted) == 0 {
-			output := fmt.Sprintf(fmtNoBranchesFound, repo)
+			output := fmt.Sprintf("No gone branches found in repository %s.\n", repo)
 			_, _ = w.Write([]byte(output))
 			continue
 		}
 
-		output := fmt.Sprintf(fmtGoneBranchesHeading, repo)
+		output := fmt.Sprintf("Found gone branches in repository %s:\n", repo)
 		_, _ = w.Write([]byte(output))
 
 		for branch, err := range deleted {
@@ -97,11 +75,11 @@ func Branches(path string, options *BranchesOptions, w io.Writer) error {
 
 			switch {
 			case options.DryRun:
-				output = fmt.Sprintf(fmtRemovalPreview, branch)
+				output = fmt.Sprintf("\t- Will delete branch %s\n", branch)
 			case err != nil:
-				output = fmt.Sprintf(fmtRemovalFailure, branch, err.Error())
+				output = fmt.Sprintf("\t- Failed to delete branch %s: %s\n", branch, err.Error())
 			default:
-				output = fmt.Sprintf(fmtRemovalSuccess, branch)
+				output = fmt.Sprintf("\t- Deleted branch %s\n", branch)
 			}
 
 			_, _ = w.Write([]byte(output))
@@ -117,9 +95,9 @@ func Version(options *VersionOptions, w io.Writer) error {
 
 	switch {
 	case options.Quiet:
-		output = fmt.Sprintf(fmtQuietVersion, version)
+		output = fmt.Sprintf("%s\n", version)
 	default:
-		output = fmt.Sprintf(fmtVersion, version)
+		output = fmt.Sprintf("cleanup version %s\n", version)
 	}
 
 	_, _ = w.Write([]byte(output))
@@ -130,10 +108,10 @@ func Version(options *VersionOptions, w io.Writer) error {
 // deleteBranches deletes branches in a repository that are considered
 // gone. For determining these branches, `git branch -vv` will be used.
 //
-// Returns a map with the deleted branches as map keys and an error as
-// value. If the error value is not nil for a key, the branch probably
-// couldn't be deleted successfully. The second return value indicates
-// if an error occurred when executing the `git branch -vv` command.
+// Returns a map of deleted branch names mapped against an error value.
+// If the error value is not nil, the corresponding branch couldn't be
+// deleted successfully. The second return value indicates if an error
+// occurred when running the `git branch -vv` command.
 func deleteBranches(path RepositoryPath, dryRun bool, exclude []string) (map[string]error, error) {
 	cmd := exec.Command("git", "branch", "-vv")
 	cmd.Dir = string(path)
@@ -143,9 +121,13 @@ func deleteBranches(path RepositoryPath, dryRun bool, exclude []string) (map[str
 		return nil, err
 	}
 
+	branches := readBranchNames(out, func(line string) bool {
+		return strings.Contains(line, searchExpr)
+	})
+
 	deleted := make(map[string]error)
 
-	for _, branch := range readBranchNames(out, searchExpr) {
+	for _, branch := range branches {
 		if isExcluded(branch, exclude) {
 			continue
 		}
@@ -164,26 +146,26 @@ func deleteBranches(path RepositoryPath, dryRun bool, exclude []string) (map[str
 	return deleted, nil
 }
 
-// readBranchNames reads Git branch names contained in a byte slice. It
-// expects the output of `git branch -vv` as input. The accepted filter
-// provides a simple way for only processing lines that contain a term.
+// readBranchNames reads Git branch names contained in a byte slice,
+// which is expected to be the output of `git branch -vv`. Each line
+// is tested against a filter function and will only be processed if
+// it passes that filter.
 //
 // The Git output is expected to look like this:
+//
 // * master		34a234a [origin/master] Merged some features
 //  feature/1	34a234a [origin/feature/1: gone] Implemented endpoints
 //  feature/2	3fc2e37 [origin/feature/2: behind 71] Added CLI command
 //
-// Using a filter for gone branches, merely feature/1 will be returned.
-//
 // Returns a list of branch names that appeared in the byte sequence.
-func readBranchNames(buf []byte, filter string) []string {
+func readBranchNames(buf []byte, filter func(string) bool) []string {
 	branches := make([]string, 0)
 	scanner := bufio.NewScanner(bytes.NewBuffer(buf))
 
 	for scanner.Scan() {
 		line := scanner.Text()
 
-		if !strings.Contains(line, filter) {
+		if !filter(line) {
 			continue
 		}
 
@@ -198,14 +180,11 @@ func readBranchNames(buf []byte, filter string) []string {
 	return branches
 }
 
-// repositoryPaths returns all paths to repositories contained in a given
-// path.
+// repositoryPaths returns all repository paths contained in a path.
 //
-// In the case that the provided path itself is a repository, it simply
-// will return that path. However, in the case that the path is a parent
-// directory containing multiple repositories, it returns all that paths.
-//
-// hasMultipleRepos indicates if the provided path is a parent directory.
+// If the provided path itself is a repository, it will be included in
+// the returned path slice. If the hasMultipleRepos flag is `true`, all
+// direct parent directories that are Git repositories will be returned.
 func repositoryPaths(path string, hasMultipleRepos bool) ([]RepositoryPath, error) {
 	paths := make([]RepositoryPath, 0)
 
