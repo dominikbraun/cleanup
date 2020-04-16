@@ -1,3 +1,11 @@
+#
+# Cleanup CircleCI 2.1 Configuration
+#
+# This CI pipeline is capable of validating the code, running unit
+# tests and - if the workflow has been triggered by a tag - building
+# binaries for all supported platforms, creating a GitHub release as
+# well as publishing a corresponding Docker image to Docker Hub.
+#
 version: 2.1
 
 executors:
@@ -6,175 +14,153 @@ executors:
       - image: circleci/golang:1.13
         environment:
           CGO_ENABLED: 0
-          GO111MODULE: "on"
-
-  github-container:
-    docker:
-      - image: circleci/golang:1.13
+          G111MODULE: "on"
 
 jobs:
-  # cleanup-test runs all unit tests. The `go test` command to run them
-  # can be found in the Makefile. This job merely executes `make test`.
   cleanup-test:
     executor: go-container
     steps:
       - checkout
       - restore_cache:
           keys:
-            - go-mod-v1-{{ .Branch }}-{{ checksum "go.mod" }}
-            - go-mod-v1-{{ .Branch }}-
-            - go-mod-v1-
-            - git-v1-{{ .Branch }}-{{ .Revision }}
-            - git-v1-{{ .Branch }}
+            - dependency-cache-v1-{{ .Branch }}-{{ checksum "go.mod" }}
+            - dependency-cache-v1-{{ .Branch }}-
+            - dependency-cache-v1-
+            - repository-cache-v1-{{ .Branch }}-{{ .Revision }}
+            - repository-cache-v1-{{ .Branch }}-
+            - repository-cache-v1-
       - run: go mod download
       - save_cache:
-          key: go-mod-v1-{{ .Branch }}-{{ checksum "go.mod" }}
+          key: dependency-cache-v1-{{ .Branch }}-{{ checksum "go.mod" }}
           paths:
             - /go/pkg
       - save_cache:
-          key: git-v1-{{ .Branch }}-{{ .Revision }}
+          key: repository-cache-v1-{{ .Branch }}-{{ .Revision }}
           paths:
             - ".git"
-      - run: make test
+      - run:
+          name: Check Go format
+          command: "! go fmt ./... | read"
+      - run:
+          name: Run all tests
+          command: go test -v ./...
 
-  # cleanup-build downloads all dependencies and performs a simple build.
-  # The `go build` command can be found in the Makefile. This job merely
-  # executes `make build`.
-  cleanup-build:
+  cleanup-build-releases:
     executor: go-container
     steps:
       - checkout
       - restore_cache:
           keys:
-            - go-mod-v1-{{ .Branch }}-{{ checksum "go.mod" }}
-            - go-mod-v1-{{ .Branch }}-
-            - go-mod-v1-
-            - git-v1-{{ .Branch }}-{{ .Revision }}
-            - git-v1-{{ .Branch }}
+            - dependency-cache-v1-{{ .Branch }}-{{ checksum "go.mod" }}
+            - dependency-cache-v1-{{ .Branch }}-
+            - dependency-cache-v1-
+            - repository-cache-v1-{{ .Branch }}-{{ .Revision }}
+            - repository-cache-v1-{{ .Branch }}-
+            - repository-cache-v1-
       - run: go mod download
       - save_cache:
-          key: go-mod-v1-{{ .Branch }}-{{ checksum "go.mod" }}
+          key: dependency-cache-v1-{{ .Branch }}-{{ checksum "go.mod" }}
           paths:
             - /go/pkg
       - save_cache:
-          key: git-v1-{{ .Branch }}-{{ .Revision }}
+          key: repository-cache-v1-{{ .Branch }}-{{ .Revision }}
           paths:
             - ".git"
+      - run: mkdir -p /tmp/artifacts
       - run:
-          name: Build the cleanup binary
-          command: make build
-
-  # cleanup-release-build builds the actual artifacts for all supported
-  # platforms. These binaries are tarred/zipped, while the archive has
-  # the name of the platform and architecture.
-  #
-  # These archives are saved to the workspace to access them in other
-  # jobs like the release job. The Linux binary is copied and persisted
-  # to an additional workspace directory as well. This binary can be
-  # used to obtain the cleanup version for creating the release.
-  cleanup-release-build:
-    executor: go-container
-    steps:
-      - checkout
-      - restore_cache:
-          keys:
-            - go-mod-v1-{{ .Branch }}-{{ checksum "go.mod" }}
-            - go-mod-v1-{{ .Branch }}-
-            - go-mod-v1-
-            - git-v1-{{ .Branch }}-{{ .Revision }}
-            - git-v1-{{ .Branch }}
-      - run: go mod download
-      - save_cache:
-          key: go-mod-v1-{{ .Branch }}-{{ checksum "go.mod" }}
-          paths:
-            - /go/pkg
-      - save_cache:
-          key: git-v1-{{ .Branch }}-{{ .Revision }}
-          paths:
-            - ".git"
-      - run: mkdir /tmp/artifacts && mkdir /tmp/local-bin
-      # Build cleanup for Linux/AMD64. This binary will be copied and
-      # persisted for later usage in the CI workflow.
-      - run:
-          name: Build and pack cleanup for Linux
+          name: Build and pack Cleanup for Linux
           command: |
-            GOOS=linux GOARCH=amd64 go build -v -o .target/cleanup .
-            cp .target/cleanup /tmp/local-bin/cleanup
-            tar -czf /tmp/artifacts/cleanup-linux-amd64.tar.gz .target/cleanup
-      # Build cleanup for macOS/amd64.
+            GOOS=linux GOARCH=amd64 go build -v -ldflags "-X main.version=${CIRCLE_TAG}" \
+              -o .target/cleanup main.go
+            cp .target/cleanup cleanup
+            tar -czf /tmp/artifacts/cleanup-linux-amd64.tar.gz cleanup
       - run:
-          name: Build and pack cleanup for macOS
+          name: Build and pack Cleanup for macOS
           command: |
-            GOOS=darwin GOARCH=amd64 go build -v -o .target/cleanup .
-            tar -czf /tmp/artifacts/cleanup-macos-amd64.tar.gz .target/cleanup
-      # Build cleanup for Windows/amd64.
+            GOOS=darwin GOARCH=amd64 go build -v -ldflags "-X main.version=${CIRCLE_TAG}" \
+              -o .target/cleanup main.go
+            cp .target/cleanup cleanup
+            tar -czf /tmp/artifacts/cleanup-macos-amd64.tar.gz cleanup
       - run:
-          name: Build and pack cleanup for Windows
+          name: Build and pack Cleanup for Windows
           command: |
-            GOOS=windows GOARCH=amd64 go build -v -o .target/cleanup.exe .
-            zip /tmp/artifacts/cleanup-windows-amd64.zip .target/cleanup.exe
-      # Persist the artifact archives to the workspace for later
-      # usage. All archives listed here will be released.
+            GOOS=windows GOARCH=amd64 go build -v -ldflags "-X main.version=${CIRCLE_TAG}" \
+              -o .target/cleanup.exe main.go
+            cp .target/cleanup.exe cleanup.exe
+            zip /tmp/artifacts/cleanup-windows-amd64.zip cleanup.exe
       - persist_to_workspace:
           root: /tmp/artifacts
           paths:
             - cleanup-linux-amd64.tar.gz
             - cleanup-macos-amd64.tar.gz
             - cleanup-windows-amd64.zip
-      # Persist a copied Linux binary to the workspace. This
-      # binary can be used for obtaining the cleanup version.
-      - persist_to_workspace:
-          root: /tmp/local-bin
-          paths:
-            - cleanup
 
-  # gh-release performs the actual release to GitHub. This creates
-  # a new release and uploads the artifacts that have been persisted
-  # to `/tmp/artifacts` before.
-  #
-  # All required GitHub credentials are delivered as environment
-  # variables from CircleCI.
-  gh-release:
-    executor: github-container
+  cleanup-release-gh:
+    docker:
+      - image: cibuilds/github:0.10
     steps:
       - attach_workspace:
           at: /tmp/artifacts
-      - attach_workspace:
-          at: /tmp/local-bin
       - run: mkdir artifacts && cp /tmp/artifacts/* artifacts/
-      - run: cp /tmp/local-bin/cleanup .
-      # Use the helper cleanup binary to obtain the cleanup version.
-      - run: VERSION=$(./cleanup version --quiet)
-      # The helper cleanup binary used to be contained in the release
-      # even though ghr should only upload files from the artifacts
-      # directory. This removes the helper binary before the release.
-      - run: rm cleanup
       - run:
           name: Publish GitHub release
           command: |
-            go get github.com/tcnksm/ghr
-            ghr -t "$GITHUB_TOKEN" \
-                -u "$CIRCLE_PROJECT_USERNAME" \
-                -r "$CIRCLE_PROJECT_REPONAME" \
-                -c "$CIRCLE_SHA1" \
-                -n "cleanup v$VERSION" \
-                $VERSION artifacts/
+            ghr -t "${GITHUB_TOKEN}" \
+                -u "${CIRCLE_PROJECT_USERNAME}" \
+                -r "${CIRCLE_PROJECT_REPONAME}" \
+                -c "${CIRCLE_SHA1}" \
+                -delete "${CIRCLE_TAG}" \
+                artifacts/
+
+  cleanup-release-docker:
+    docker:
+      - image: circleci/buildpack-deps:stretch
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Log in to Docker Hub
+          command: |
+            echo ${DOCKER_PASS} | docker login --username ${DOCKER_USER} --password-stdin
+      - run:
+          name: Build the Docker image (Light)
+          command: |
+            docker image build --build-arg VERSION=${CIRCLE_TAG} -t dominikbraun/cleanup:${CIRCLE_TAG} .
+      - run:
+          name: Tag the Docker image (Light) as latest
+          command: |
+            docker image tag dominikbraun/cleanup:${CIRCLE_TAG} dominikbraun/cleanup:latest
+      - run:
+          name: Publish the Docker images (Light)
+          command: |
+            docker push dominikbraun/cleanup:${CIRCLE_TAG}
+            docker push dominikbraun/cleanup:latest
 
 workflows:
   version: 2
   cleanup-ci:
     jobs:
-      - cleanup-build
-      - cleanup-test
-      - cleanup-release-build:
+      - cleanup-test:
+          filters:
+            tags:
+              only: /.*/
+      - cleanup-build-releases:
           requires:
-            - cleanup-build
             - cleanup-test
           filters:
             tags:
-              only: /^\d+\.\d+\.\d+$/
+              only: /.*/
             branches:
               ignore: /.*/
-      - gh-release:
+      - cleanup-release-gh:
           requires:
-            - cleanup-release-build
+            - cleanup-build-releases
+          filters:
+            tags:
+              only: /.*/
+      - cleanup-release-docker:
+          requires:
+            - cleanup-release-gh
+          filters:
+            tags:
+              only: /.*/
