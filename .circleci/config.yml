@@ -71,21 +71,21 @@ jobs:
           name: Build and pack Cleanup for Linux
           command: |
             GOOS=linux GOARCH=amd64 go build -v -ldflags "-X main.version=${CIRCLE_TAG}" \
-              -o .target/cleanup main.go
+              -o .target/cleanup .
             cp .target/cleanup cleanup
             tar -czf /tmp/artifacts/cleanup-linux-amd64.tar.gz cleanup
       - run:
           name: Build and pack Cleanup for macOS
           command: |
             GOOS=darwin GOARCH=amd64 go build -v -ldflags "-X main.version=${CIRCLE_TAG}" \
-              -o .target/cleanup main.go
+              -o .target/cleanup .
             cp .target/cleanup cleanup
             tar -czf /tmp/artifacts/cleanup-macos-amd64.tar.gz cleanup
       - run:
           name: Build and pack Cleanup for Windows
           command: |
             GOOS=windows GOARCH=amd64 go build -v -ldflags "-X main.version=${CIRCLE_TAG}" \
-              -o .target/cleanup.exe main.go
+              -o .target/cleanup.exe .
             cp .target/cleanup.exe cleanup.exe
             zip /tmp/artifacts/cleanup-windows-amd64.zip cleanup.exe
       - persist_to_workspace:
