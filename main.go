@@ -17,7 +17,7 @@ func main() {
 	var versionOptions VersionOptions
 
 	cleanupCmd := &cobra.Command{
-		Use:     "cleanupCmd",
+		Use:     "cleanup",
 		Aliases: []string{"git-cleanupCmd"},
 		Short:   `💫 Remove gone Git branches with ease.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -42,6 +42,10 @@ func main() {
 		"d", false, `Preview the branches without deleting them`)
 	branchesCmd.Flags().StringVarP(&branchesOptions.Exclude, "exclude",
 		"e", "", `Exclude one or more branches from deletion`)
+	branchesCmd.Flags().StringVarP(&branchesOptions.Where, "where",
+		"w", "", `Delete all branches whose output contain a given string`)
+	branchesCmd.Flags().StringVar(&branchesOptions.AndWhere, "and-where",
+		"", `Delete all gone branches whose output contain a given string`)
 
 	versionCmd := &cobra.Command{
 		Use:   "version",

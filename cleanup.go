@@ -27,6 +27,8 @@ type BranchesOptions struct {
 	Force            bool
 	DryRun           bool
 	Exclude          string
+	Where            string
+	AndWhere         string
 }
 
 // VersionOptions are user-defined options for the `version` command
@@ -54,7 +56,7 @@ func RunBranches(path string, options *BranchesOptions, w io.Writer) error {
 	exclude = append(exclude, "master")
 
 	for _, repo := range repositories {
-		deleted, err := deleteBranches(repo, options.DryRun, exclude)
+		deleted, err := deleteBranches(repo, options, exclude)
 		if err != nil {
 			output := fmt.Sprintf("Error in repository %s: %s\n", repo, err.Error())
 			_, _ = w.Write([]byte(output))
@@ -112,7 +114,7 @@ func Version(options *VersionOptions, w io.Writer) error {
 // If the error value is not nil, the corresponding branch couldn't be
 // deleted successfully. The second return value indicates if an error
 // occurred when running the `git branch -vv` command.
-func deleteBranches(path RepositoryPath, dryRun bool, exclude []string) (map[string]error, error) {
+func deleteBranches(path RepositoryPath, options *BranchesOptions, exclude []string) (map[string]error, error) {
 	cmd := exec.Command("git", "branch", "-vv")
 	cmd.Dir = string(path)
 
@@ -122,6 +124,12 @@ func deleteBranches(path RepositoryPath, dryRun bool, exclude []string) (map[str
 	}
 
 	branches := readBranchNames(out, func(line string) bool {
+		if options.Where != "" {
+			return strings.Contains(line, options.Where)
+		}
+		if options.AndWhere != "" {
+			return strings.Contains(line, searchExpr) && strings.Contains(line, options.AndWhere)
+		}
 		return strings.Contains(line, searchExpr)
 	})
 
@@ -132,7 +140,7 @@ func deleteBranches(path RepositoryPath, dryRun bool, exclude []string) (map[str
 			continue
 		}
 
-		if !dryRun {
+		if !options.DryRun {
 			cmd := exec.Command("git", "branch", "-d", branch)
 			cmd.Dir = string(path)
 
