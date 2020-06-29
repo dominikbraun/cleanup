@@ -20,6 +20,7 @@ func main() {
 		Use:     "cleanup",
 		Aliases: []string{"git-cleanupCmd"},
 		Short:   `💫 Remove gone Git branches with ease.`,
+		Version: version,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},
