@@ -45,9 +45,26 @@ There appear some branches that probably shouldn't be deleted? You can simply ex
 $ cleanup branches --exclude="feature/3, feature/4" .
 ````
 
+**Deleting branches that match a custom search term**
+
+`--where` allows you to specify a string that has to be included in a branch's `git branch -vv` output. This option
+overrides the default filter for gone branches, _meaning that also non-gone branches will be deleted_. 
+
+For example, deleting _all_ feature branches is as simple as:
+
+```shell script
+$ cleanup branches --where="feature/" .
+```
+
+In case you want to delete _only gone feature branches_, extend the default filter for gone branches with `--and-where`.
+
+```shell script
+$ cleanup branches --and-where="feature/" .
+```
+
 **Cleaning multiple repositories at once**
 
-Many developers work on multiple projects at once. Let's assume that these projects have a common parent directory.
+Most developers work on multiple projects at once. Let's assume that these projects have a common parent directory.
 
 <img src="https://sternentstehung.de/example-projects.png">
 
@@ -68,7 +85,9 @@ $ git branch -vv
   feature/2	3fc2e37 [origin/feature/2: gone] Added CLI flags
 ````
 
-Based on that output, cleanup performs `git branch -d <branch>` on all gone branches. Maybe you've been doing the same thing manually for each branch in each repository.
+Based on that output, cleanup performs `git branch -d <branch>` on all gone branches. Maybe you've been doing the same
+thing manually for each branch in each repository. However, the `--where` flag allows you to specify a custom string
+that has to be included to delete the branch.
 
 ## <img src="https://sternentstehung.de/cleanup-dot.png"> Installation
 
