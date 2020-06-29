@@ -9,7 +9,7 @@ import (
 
 // version will be populated with the current Git tag when building the
 // cleanup binary using the CI/CD pipeline.
-const version string = "UNSPECIFIED"
+var version string = "UNSPECIFIED"
 
 // main builds the CLI commands and executes the desired sub-command.
 func main() {
