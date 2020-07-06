@@ -1,0 +1,25 @@
+#
+# Cleanup Drone Configuration
+#
+kind: pipeline
+type: docker
+name: default
+
+steps:
+  - name: test
+    image: golang:1.13-alpine
+    commands:
+      - go test
+      - go build
+    volumes:
+      - name: dependencies
+        path: /go
+
+volumes:
+  - name: dependencies
+    temp:
+      {}
+
+trigger:
+  branch:
+    - drone
