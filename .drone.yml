@@ -14,6 +14,8 @@ steps:
     volumes:
       - name: dependencies
         path: /go
+    environment:
+      CGO_ENABLED: 0
 
 volumes:
   - name: dependencies
