@@ -11,6 +11,7 @@ steps:
     commands:
       - go test
       - go build
+      - /bin/bash scripts/gofmt.sh
     volumes:
       - name: dependencies
         path: /go
