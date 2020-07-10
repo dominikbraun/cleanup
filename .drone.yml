@@ -18,6 +18,13 @@ steps:
     environment:
       CGO_ENABLED: 0
 
+  - name: build
+    image: golang:1.13-alpine
+    commands: go build
+    volumes:
+      - dependencies
+      - path: /go
+
 volumes:
   - name: dependencies
     temp:
