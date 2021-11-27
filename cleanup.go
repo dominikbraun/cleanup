@@ -99,7 +99,7 @@ func Version(options *VersionOptions, w io.Writer) error {
 	case options.Quiet:
 		output = fmt.Sprintf("%s\n", version)
 	default:
-		output = fmt.Sprintf("cleanup version %s\n", version)
+		output = fmt.Sprintf("cleanup version %s (%s)\n", version, repoURL)
 	}
 
 	_, _ = w.Write([]byte(output))

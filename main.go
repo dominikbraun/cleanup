@@ -11,6 +11,10 @@ import (
 // cleanup binary using the CI/CD pipeline.
 var version string = "UNSPECIFIED"
 
+// repoURL is the "breadcrumb" back to the repo where bug reports or feature
+// requests can be filed or new versions of this tool can be downloaded.
+const repoURL = "https://github.com/dominikbraun/cleanup"
+
 // main builds the CLI commands and executes the desired sub-command.
 func main() {
 	var branchesOptions BranchesOptions
